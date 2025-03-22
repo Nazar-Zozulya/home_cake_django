@@ -16,3 +16,10 @@ def get_all_products(request):
     serialized_products = ProductsSerializer(all_products, many=True)
     
     return JsonResponse(serialized_products.data, safe=False)
+
+def get_product_by_id(request, id):
+    product = Products.objects.filter(pk=id).first()
+    
+    serializer = ProductsSerializer(product)
+    
+    return JsonResponse(serializer.data, safe=False)
