@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-tb_(mualshtndjye5m_9%#%)+os$gi)bq)yr(9+wlx^9=842b3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','Shmyk.pythonanywhere.com','www.Shmyk.pythonanywhere.com']
 
 
 # Application definition
