@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 
 from .serialezers import ProductsSerializer
@@ -27,13 +27,12 @@ def get_product_by_id(request, id):
 
 def send_test_mail(request):
     if request.method == 'GET':
-        print('123')
-        # send_mail(
-        #     'Test Email',
-        #     'This is a test email',
-        #     'nazarcanva@gmail.com',
-        #     ['likeemangames@gmail.com'],
-        #     fail_silently=False,
-        # )
+        send_mail(
+            'Test Email',
+            'This is a test email',
+            'nazarcanva@gmail.com',
+            ['likeemangames@gmail.com'],
+            fail_silently=False,
+        )
     
-    return JsonResponse('ok')
+    return HttpResponse('ok')
