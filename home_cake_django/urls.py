@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/product/all/', get_all_products),
     path('api/product/<int:id>', get_product_by_id),
-    path('send_mail',  send_test_mail)
+    path('send/test',  send_test_mail)
 ]
 
 if settings.DEBUG:
