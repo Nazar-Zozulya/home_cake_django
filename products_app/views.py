@@ -25,7 +25,7 @@ def get_product_by_id(request, id):
     return JsonResponse(serializer.data, safe=False)
 
 
-def send_test_mail():
+def send_test_mail(request):
     
     send_mail(
         'Test Email',
@@ -34,3 +34,5 @@ def send_test_mail():
         ['likeemangames@gmail.com'],
         fail_silently=False,
     )
+    
+    return JsonResponse('ok')
