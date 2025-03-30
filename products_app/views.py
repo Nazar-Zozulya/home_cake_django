@@ -28,7 +28,7 @@ def get_product_by_id(request, id):
 @csrf_exempt
 def send_test_mail(request):
     if request.method == 'POST':
-        data = request.data()
+        data = request.data
         send_mail(
             'Test Email',
             f"{data}",
