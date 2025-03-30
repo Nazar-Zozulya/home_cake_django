@@ -116,6 +116,10 @@ USE_I18N = True
 USE_TZ = True
 
 
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]  # Разрешаем запросы с React
+
+CSRF_COOKIE_SECURE = False  # Только для разработки!
+
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
