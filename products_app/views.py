@@ -26,10 +26,11 @@ def get_product_by_id(request, id):
 
 
 def send_test_mail(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
+        data = request.body()
         send_mail(
             'Test Email',
-            'This is a test email',
+            f"{data}",
             'nazarcanva@gmail.com',
             ['likeemangames@gmail.com'],
             fail_silently=False,
