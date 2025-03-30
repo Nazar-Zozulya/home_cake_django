@@ -27,12 +27,13 @@ def get_product_by_id(request, id):
 
 def send_test_mail(request):
     if request.method == 'GET':
-        send_mail(
-            'Test Email',
-            'This is a test email',
-            'nazarcanva@gmail.com',
-            ['likeemangames@gmail.com'],
-            fail_silently=False,
-        )
+        print('123')
+        # send_mail(
+        #     'Test Email',
+        #     'This is a test email',
+        #     'nazarcanva@gmail.com',
+        #     ['likeemangames@gmail.com'],
+        #     fail_silently=False,
+        # )
     
     return JsonResponse('ok')
