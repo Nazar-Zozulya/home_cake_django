@@ -25,7 +25,7 @@ def get_product_by_id(request, id):
     return JsonResponse(serializer.data, safe=False)
 
 
-def send_mail():
+def send_test_mail():
     
     send_mail(
         'Test Email',
