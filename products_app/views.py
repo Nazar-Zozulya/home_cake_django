@@ -5,6 +5,7 @@ from .serialezers import ProductsSerializer
 from rest_framework import generics
 from .models import Products
 from django.core.mail import send_mail
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 
@@ -24,6 +25,7 @@ def get_product_by_id(request, id):
     
     return JsonResponse(serializer.data, safe=False)
 
+@csrf_exempt
 def send_test_mail(request):
     if request.method == 'POST':
         data = request.body()
