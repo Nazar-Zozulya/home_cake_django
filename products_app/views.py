@@ -4,7 +4,7 @@ from django.shortcuts import render
 from .serialezers import ProductsSerializer
 from rest_framework import generics
 from .models import Products
-
+from django.core.mail import send_mail
 # Create your views here.
 
 
@@ -23,3 +23,14 @@ def get_product_by_id(request, id):
     serializer = ProductsSerializer(product, context={'request': request})
     
     return JsonResponse(serializer.data, safe=False)
+
+
+def send_mail():
+    
+    send_mail(
+        'Test Email',
+        'This is a test email',
+        'nazarcanva@gmail.com',
+        ['likeemangames@gmail.com'],
+        fail_silently=False,
+    )
