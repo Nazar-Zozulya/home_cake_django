@@ -1,6 +1,6 @@
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
-
+from django.middleware.csrf import get_token
 from .serialezers import ProductsSerializer
 from rest_framework import generics
 from .models import Products
@@ -24,7 +24,6 @@ def get_product_by_id(request, id):
     
     return JsonResponse(serializer.data, safe=False)
 
-
 def send_test_mail(request):
     if request.method == 'POST':
         data = request.body()
@@ -37,3 +36,6 @@ def send_test_mail(request):
         )
     
     return HttpResponse('ok')
+
+def get_csrf(request):
+    return JsonResponse({"csrfToken": get_token(request)})
