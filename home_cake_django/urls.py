@@ -25,7 +25,8 @@ urlpatterns = [
     path('api/product/all/', get_all_products),
     path('api/product/<int:id>', get_product_by_id),
     path('send/test',  send_test_mail),
-    path('csrf/', get_csrf)
+    path('csrf/', get_csrf),
+    path('verify/email/<str:email>/<str:token>/')
 ]
 
 if settings.DEBUG:
