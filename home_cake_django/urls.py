@@ -24,7 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/product/all/', get_all_products),
     path('api/product/<int:id>', get_product_by_id),
-    path('send/test/',  send_test_mail),
+    path('send/self-order/',  send_self_order),
+    path('send/order/', send_order),
     path('csrf/', get_csrf),
     path('verify/email/<str:email>/<str:token>/',  verify_email)
 ]
