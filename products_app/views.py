@@ -32,32 +32,64 @@ def get_product_by_id(request, id):
 @csrf_exempt
 def send_order(request):
     data = json.loads(request.body.decode('utf-8'))
-    userData = data['userData']
-    totalSum = data['totalSum']
-
+        
+    # Генерация уникального токена и order_id
     token = secrets.token_urlsafe(16)
+    order_id = str(uuid.uuid4())  # Генерируем уникальный order_id
+    
+    userData = data['userData']
+    productsInCart = data['productsInCart']
+    
+    product_ids = [item['id'] for item in productsInCart]
+    id_to_count = {item['id']: item['count'] for item in productsInCart}
+    
     order_id = str(uuid.uuid4())
     payment_url = f"http://localhost:3000/fake-payment/{order_id}/"  # ← фейковая ссылка
 
+    products = Products.objects.filter(id__in=product_ids)
+    
+    serialized_products = []
+    for product in products:
+        serialized = ProductsSerializer(product).data
+        serialized['count'] = id_to_count.get(product.id, 0)
+        serialized_products.append(serialized)
+    
+    print(serialized_products)
+    
+    product_details = ""
+    for product in serialized_products:
+        product_details += f"Продукт: {product['name']}\nКількість: {product['count']}\n\n"
+    
+    message = (
+        f"Ім'я: {userData['name']} {userData['surname']}\n"
+        f"Номер телефону: {userData['phone']}\n"
+        f"Пошта: {userData['email']}\n"
+        f"Тип доставки: {userData['deliveryMethod']}\n"
+        f"{f'Адреса: {userData['adress']}\nДата: {userData['data']}\nЧас: {userData['time']}\n' if userData['deliveryMethod'] == 'Доставка' else ''}"
+        f"Сумма заказу: {data['totalSum']}\n"
+        f"Продукти в замовленні:\n{product_details}"
+    )
+    
+    userData['message'] = message
+    
     verification_link = f"http://localhost:8000/verify/email/{userData['email']}/{token}/"
-
-    userData['message'] = f"Ім'я: {userData['name']}\nEmail: {userData['email']}\nСума: {totalSum}"
-
-    order_info = {
-        "token": token,
+    
+    orderInfo = {
         "userData": userData,
-        "order_id": order_id,
-        "payment_url": payment_url,
+        "token": token,
+        "title": "Заказ",
+        'totalSum':data['totalSum'],
+        'pay':'yes',
     }
-
-    cache.set(token, order_info, timeout=3600)
-
+    
+    cache.set(token, orderInfo, timeout=3600)  # Сохраняем заказ в кеш
+    
     send_mail(
-        'Підтвердження пошти',
-        f"Привіт, підтвердіть пошту за посиланням: {verification_link}",
+        'Підтверження пошти',
+        f"Добрий день {userData['name']} Підтвердіть свою пошту по цьому посиланню: {verification_link}",
         settings.EMAIL_HOST_USER,
         [userData['email']],
-        fail_silently=False
+        fail_silently=False,
     )
 
     return JsonResponse({"status": "ok"})
@@ -70,10 +102,7 @@ def send_self_order(request):
         
         print(1)
         
-        token = secrets.token_urlsafe(16)
-        
-        # cache.set(data['email'], token, timeout=3600)
-        
+        token = secrets.token_urlsafe(16)        
         print(data)
         
         message = (
@@ -83,36 +112,27 @@ def send_self_order(request):
             f"Заказ:\n{data['describeOrder']}"
         )
         
+        data['message'] = message
+        
         order_info = {
             'token':token,
-            "data":data,
-            'message':message,
-            'title':'   '
-        }
-
-        # print(tokenbebra)        
+            "userData":data,
+            # 'message':message,
+            'title':"Особистий заказ",
+        }    
 
         verification_link = f"http://localhost:8000/verify/email/{data['email']}/{token}/"
         
-        cache.set(token, order_info)
+        cache.set(token, order_info, timeout=3600)
         
         
-        # send_mail(
-        #     'Підтверження пошти',
-        #     f"Добрий день {data['name']} Підтвердіть свою пошту по цьому посиланню: {verification_link}",
-        #     settings.EMAIL_HOST_USER,
-        #     [data['email']],
-        #     fail_silently=False,
-        # )
-        
-        
-        # send_mail(
-        #     'Особистий заказ',
-        #     message,
-        #     settings.EMAIL_HOST_USER,
-        #     ['likeemangames@gmail.com'],
-        #     fail_silently=False,
-        # )
+        send_mail(
+            'Підтверження пошти',
+            f"Добрий день {data['name']} Підтвердіть свою пошту по цьому посиланню: {verification_link}",
+            settings.EMAIL_HOST_USER,
+            [data['email']],
+            fail_silently=False,
+        )
 
         return HttpResponse('ok')
     except:
@@ -134,10 +154,31 @@ def verify_email(request, email, token):
     )
 
     cache.delete(token)
+    
+    
+    
+    if(data.get('pay', False) != False):
+        monobank_json = {
+            "amount": int(f"{data['totalSum']}00"),
+            "ccy": 980,
+            "merchantPaymInfo": {
+                "reference": "84d0070ee4e44667b31371d8f8813947",
+                "destination": "Покупка щастя",
+                "comment": "Покупка щастя",
+                "customerEmails": [],
+            }
+        }
+        api_token = "ug89PDMsFgQ5AWMpyubBNo5qyPkwiXS6EJ-_hqSyu7zI"
+        
+        response = requests.post('https://api.monobank.ua/api/merchant/invoice/create', json=monobank_json, headers={'X-Token': api_token}).json()
 
-    # редирект на ссылку оплаты
-    return redirect(data['payment_url'])
-
+        # page_url = response['pageUrl']
+        
+        # return JsonResponse(page_url, safe=False)
+        return redirect(response['pageUrl'])
+    else:
+        return JsonResponse(data)
+    
 def get_csrf(request):
     token = get_token(request)
     response = JsonResponse({"csrfToken": token} )
