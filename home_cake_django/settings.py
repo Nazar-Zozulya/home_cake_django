@@ -64,7 +64,7 @@ MIDDLEWARE = [
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv('REDIS_URL'),
+        "LOCATION": "rediss://:<password>@proper-python-23935.upstash.io:6379",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "SSL": True,  # обязательно, так как у тебя TLS/SSL включен
