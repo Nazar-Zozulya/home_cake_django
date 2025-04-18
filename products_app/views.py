@@ -35,7 +35,7 @@ def send_order(request):
         
     # Генерация уникального токена и order_id
     token = secrets.token_urlsafe(16)
-    order_id = str(uuid.uuid4())  # Генерируем уникальный order_id
+    # order_id = str(uuid.uuid4())  # Генерируем уникальный order_id
     
     userData = data['userData']
     productsInCart = data['productsInCart']
@@ -43,8 +43,8 @@ def send_order(request):
     product_ids = [item['id'] for item in productsInCart]
     id_to_count = {item['id']: item['count'] for item in productsInCart}
     
-    order_id = str(uuid.uuid4())
-    payment_url = f"http://localhost:3000/fake-payment/{order_id}/"  # ← фейковая ссылка
+    # order_id = str(uuid.uuid4())
+    # payment_url = f"http://localhost:3000/fake-payment/{order_id}/"  # ← фейковая ссылка
 
     products = Products.objects.filter(id__in=product_ids)
     
@@ -100,10 +100,10 @@ def send_self_order(request):
     try:
         data = json.loads(request.body.decode('utf-8'))
         
-        print(1)
+        # print(1)
         
         token = secrets.token_urlsafe(16)        
-        print(data)
+        # print(data)
         
         message = (
             f"Ім'я: {data['name']} {data['surname']}\n"
