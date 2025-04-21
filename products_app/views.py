@@ -11,25 +11,19 @@ from django.conf import settings
 from dotenv import load_dotenv
 from .serializers import ProductsSerializer
 from .models import Products
-from urllib.parse import urlparse
 
 # Загружаем переменные из .env
 load_dotenv()
 
-# Получаем URL подключения к Redis из переменной окружения
-REDIS_URL = os.getenv('REDIS_URL')
+# Получаем URL и токен Upstash REST API из переменных окружения
+UPSTASH_REST_URL = os.getenv("UPSTASH_REST_URL")
+UPSTASH_REST_TOKEN = os.getenv("UPSTASH_REST_TOKEN")
 
-# Разбираем URL для получения host, password и database
-parsed_url = urlparse(REDIS_URL)
-REDIS_HOST = parsed_url.hostname
-REDIS_PORT = parsed_url.port
-REDIS_PASSWORD = parsed_url.password
-REDIS_DB = parsed_url.path.lstrip('/')
+# ===== Функции работы с Upstash Redis через REST API =====
 
 def upstash_redis_set(key, value, timeout=3600):
-    """Сохранить значение в Upstash Redis."""
     headers = {
-        'Authorization': f'Bearer {REDIS_PASSWORD}',
+        'Authorization': f'Bearer {UPSTASH_REST_TOKEN}',
         'Content-Type': 'application/json',
     }
     data = {
@@ -37,42 +31,36 @@ def upstash_redis_set(key, value, timeout=3600):
         "value": json.dumps(value),
         "expire": timeout
     }
-    response = requests.post(f"https://{REDIS_HOST}:{REDIS_PORT}/set", json=data, headers=headers)
+    response = requests.post(f"{UPSTASH_REST_URL}/set", headers=headers, json=data)
     return response.json()
 
 def upstash_redis_get(key):
-    """Получить значение из Upstash Redis."""
     headers = {
-        'Authorization': f'Bearer {REDIS_PASSWORD}',
-        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {UPSTASH_REST_TOKEN}',
     }
-    response = requests.get(f"https://{REDIS_HOST}:{REDIS_PORT}/get/{key}", headers=headers)
+    response = requests.get(f"{UPSTASH_REST_URL}/get/{key}", headers=headers)
     if response.status_code == 200:
-        return json.loads(response.text).get("value")
+        return json.loads(response.text).get("result")
     else:
         return None
 
 def upstash_redis_delete(key):
-    """Удалить ключ из Upstash Redis."""
     headers = {
-        'Authorization': f'Bearer {REDIS_PASSWORD}',
-        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {UPSTASH_REST_TOKEN}',
     }
-    response = requests.delete(f"https://{REDIS_HOST}:{REDIS_PORT}/del/{key}", headers=headers)
+    response = requests.post(f"{UPSTASH_REST_URL}/del/{key}", headers=headers)
     return response.json()
+
+# ===== Django Views =====
 
 def get_all_products(request):
     all_products = Products.objects.all()
-
     serialized_products = ProductsSerializer(all_products, many=True, context={'request': request})
-
     return JsonResponse(serialized_products.data, safe=False)
 
 def get_product_by_id(request, id):
     product = Products.objects.filter(pk=id).first()
-
     serializer = ProductsSerializer(product, context={'request': request})
-
     return JsonResponse(serializer.data, safe=False)
 
 @csrf_exempt
@@ -121,7 +109,7 @@ def send_order(request):
         'pay': 'yes',
     }
 
-    # Сохраняем заказ в Redis через Upstash
+    # Сохраняем заказ в Redis через Upstash REST API
     upstash_redis_set(token, orderInfo)
 
     send_mail(
@@ -158,7 +146,7 @@ def send_self_order(request):
 
         verification_link = f"http://localhost:8000/verify/email/{data['email']}/{token}/"
 
-        # Сохраняем заказ в Redis через Upstash
+        # Сохраняем заказ в Redis через Upstash REST API
         upstash_redis_set(token, order_info)
 
         send_mail(
@@ -170,8 +158,8 @@ def send_self_order(request):
         )
 
         return HttpResponse('ok')
-    except:
-        return JsonResponse({'error': 'Failed to send email'}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': 'Failed to send email', 'details': str(e)}, status=500)
 
 def verify_email(request, email, token):
     data = upstash_redis_get(token)
@@ -186,3 +174,5 @@ def verify_email(request, email, token):
         ['likeemangames@gmail.com'],
         fail_silently=False
     )
+
+    return JsonResponse({"status": "ok"})
