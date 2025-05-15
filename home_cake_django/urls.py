@@ -26,7 +26,7 @@ urlpatterns = [
     path('api/product/<int:id>', get_product_by_id),
     path('send/self-order/',  send_self_order),
     path('send/order/', send_order),
-    path('csrf/', get_csrf),
+    # path('csrf/', get_csrf),
     path('verify/email/<str:email>/<str:token>/',  verify_email)
 ]
 
